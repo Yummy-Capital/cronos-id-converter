@@ -1,46 +1,15 @@
-# cronos-id-checker
+# Cronos Identity transfer ownership issue
 
-This template should help get you started developing with Vue 3 in Vite.
+| Account | Address                                                                                       |
+| ------- | --------------------------------------------------------------------------------------------- |
+| Alice   | [0xE43e9b...472000](https://cronoscan.com/address/0xE43e9bDec33AC9b1DD5d3509fB6AFED1C1472000) |
+| Bob     | [0x93e788...E2fFb4](https://cronoscan.com/address/0x93e7884138FB6f7EFed4f26609169B5d6FE2fFb4) |
 
-## Recommended IDE Setup
+1. Alice [mints](https://cronoscan.com/tx/0xbbc495961ba044118b84c4c6c100eff5c795c7d0e80dc6c39405b064fe32ae3d) `web3boss.cro`
+2. Bob [buys](https://cronoscan.com/tx/0xbca90f74b42cf6c613ab0b5c7e95f22073c50844fce22cc438f6a486076c5171) web3boss.cro on [Minted Network](https://minted.network)
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+Now, based on [cronos id converter](cronos-id-converter-ntwx6.ondigitalocean.app), we can see that Alice still owns `web3boss.cro`! Is it really? At least Alice can [make](https://cronoscan.com/tx/0x4b2eb17398d4cd2a9abd2b6715a0a4fcf4a9164fa2afae10ce730ca83cbe6cd4) changes for this domain 🤯 At the same time, Alice cannot transfer the domain to anyone else, because the domain is actually in Bob's wallet.
 
-## Type Support for `.vue` Imports in TS
+###### We have checked several recent sales, as well as the very first one, and there is a similar problem everywhere.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
-
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
-
-1. Disable the built-in TypeScript Extension
-    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+Why then does [Minted Network](https://minted.network) display the correct owner? Most likely they use their own API, backed by their own indexer, which take into account transfer events.
