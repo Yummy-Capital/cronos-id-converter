@@ -1,56 +1,71 @@
+<!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { ethers } from "ethers";
-import { ref } from "vue";
-import { forwardResolution, reverseResolution } from "./helpers/ens";
+import { ref, onMounted } from "vue";
+import LinkableAddress from "./components/LinkableAddress.vue";
+import { EnsService } from "./helpers/ens.service";
 
-const provider = new ethers.providers.JsonRpcProvider("https://evm.cronos.org");
+const service = new EnsService();
+const loading = ref(false);
+const name = ref("web3developer.cro");
 
-const domain = ref("web3developer.cro");
-const forward = ref("");
-
+const resolver = ref("");
+const owner = ref("");
 const address = ref("");
-const reverse = ref("");
+const lookup = ref("");
 
-const onDomainForward = async () => {
-  try {
-    forward.value = await forwardResolution(domain.value, provider);
-    address.value = forward.value;
-    // onAddressReverse();
-  } catch (e) {
-    alert(e);
+const fetch = async () => {
+  loading.value = true;
+  resolver.value = "";
+  owner.value = "";
+  address.value = "";
+  lookup.value = "";
+
+  await Promise.allSettled([
+    service.getResolver(name.value),
+    service.resolveOwner(name.value),
+    service.resolveName(name.value),
+  ]).then(([a, b, c]) => {
+    if (a.status === "fulfilled") {
+      resolver.value = a.value ?? "";
+    }
+
+    if (b.status === "fulfilled") {
+      owner.value = b.value ?? "";
+    }
+
+    if (c.status === "fulfilled") {
+      address.value = c.value ?? "";
+    }
+  });
+
+  if (address.value) {
+    await service
+      .lookupAddress(address.value)
+      .then((x) => (lookup.value = x ?? ""))
+      .catch(() => void 0);
   }
+
+  loading.value = false;
 };
 
-const onAddressReverse = async () => {
-  try {
-    reverse.value = await reverseResolution(address.value, provider);
-  } catch (e) {
-    alert(e);
-  }
-};
+onMounted(() => void fetch());
 </script>
 
 <template>
   <div>
-    <p>Forward Resolution (Cronos ID to address)</p>
-    <input class="x" style="width: 100%" v-model="domain" />
+    <p>Enter your Cronos ID</p>
+    <input class="x" style="width: 100%" v-model="name" />
     <br />
-    <button class="x" @click="onDomainForward">Forward</button>
-    <a
-      v-if="forward"
-      :href="`https://cronoscan.com/address/${forward}`"
-      target="_blank"
-      class="y"
-      >{{ forward }}</a
-    >
+    <button class="x" :disabled="loading" @click="void fetch()">
+      {{ loading ? "Loading..." : "Fetch" }}
+    </button>
   </div>
 
-  <div style="margin-top: 10px">
-    <p>Reverse Resolution (address to Cronos ID)</p>
-    <input class="x" style="width: 100%" v-model="address" />
-    <br />
-    <button class="x" @click="onAddressReverse">Reverse</button>
-    <span v-if="reverse" class="y">{{ reverse }}</span>
+  <div v-if="!loading">
+    <p>Resolver: <linkable-address :address="resolver" /></p>
+    <p>Owner: <linkable-address :address="owner" /></p>
+    <p>Address: <linkable-address :address="address" /></p>
+    <p>Lookup: {{ lookup || "❌" }}</p>
   </div>
 
   <hr style="margin: 10px 0" />
