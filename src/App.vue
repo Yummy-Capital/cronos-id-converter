@@ -1,29 +1,36 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import LinkableAddress from "./components/LinkableAddress.vue";
 import { EnsService } from "./helpers/ens.service";
 
 const service = new EnsService();
-const loading = ref(false);
-const name = ref("web3developer.cro");
+
+const loading = reactive({
+  address: false,
+  name: false,
+});
+
+const input = reactive({
+  address: "0x782b17c2837A117d9c499b88F56a90f14e8B53fD",
+  name: "web3developer.cro",
+});
 
 const resolver = ref("");
 const owner = ref("");
 const address = ref("");
-const lookup = ref("");
+const name = ref("");
 
-const fetch = async () => {
-  loading.value = true;
+const resolveName = async () => {
+  loading.name = true;
   resolver.value = "";
   owner.value = "";
   address.value = "";
-  lookup.value = "";
 
   await Promise.allSettled([
-    service.getResolver(name.value),
-    service.resolveOwner(name.value),
-    service.resolveName(name.value),
+    service.getResolver(input.name),
+    service.resolveOwner(input.name),
+    service.resolveName(input.name),
   ]).then(([a, b, c]) => {
     if (a.status === "fulfilled") {
       resolver.value = a.value ?? "";
@@ -38,34 +45,53 @@ const fetch = async () => {
     }
   });
 
-  if (address.value) {
-    await service
-      .lookupAddress(address.value)
-      .then((x) => (lookup.value = x ?? ""))
-      .catch(() => void 0);
-  }
-
-  loading.value = false;
+  loading.name = false;
 };
 
-onMounted(() => void fetch());
+const lookupAddress = async () => {
+  loading.address = true;
+  name.value = "";
+
+  await service
+    .lookupAddress(input.address)
+    .then((x) => (name.value = x ?? ""))
+    .catch(() => void 0);
+
+  loading.address = false;
+};
+
+onMounted(() => void Promise.allSettled([resolveName(), lookupAddress()]));
 </script>
 
 <template>
   <div>
     <p>Enter your Cronos ID</p>
-    <input class="x" style="width: 100%" v-model="name" />
+    <input class="x" style="width: 100%" v-model="input.name" />
     <br />
-    <button class="x" :disabled="loading" @click="void fetch()">
-      {{ loading ? "Loading..." : "Fetch" }}
+    <button class="x" :disabled="loading.name" @click="void resolveName()">
+      {{ loading.name ? "Loading..." : "Fetch" }}
     </button>
   </div>
 
-  <div v-if="!loading">
+  <div v-if="!loading.name">
     <p>Resolver: <linkable-address :address="resolver" /></p>
     <p>Owner: <linkable-address :address="owner" /></p>
     <p>Address: <linkable-address :address="address" /></p>
-    <p>Lookup: {{ lookup || "❌" }}</p>
+  </div>
+
+  <hr style="margin: 10px 0" />
+
+  <div>
+    <p>Enter your address</p>
+    <input class="x" style="width: 100%" v-model="input.address" />
+    <br />
+    <button class="x" :disabled="loading.address" @click="void lookupAddress()">
+      {{ loading.address ? "Loading..." : "Fetch" }}
+    </button>
+  </div>
+
+  <div v-if="!loading.address">
+    <p>Name: {{ name || "❌" }}</p>
   </div>
 
   <hr style="margin: 10px 0" />
