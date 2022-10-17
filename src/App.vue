@@ -60,7 +60,7 @@ const lookupAddress = async () => {
   loading.address = false;
 };
 
-onMounted(() => void Promise.allSettled([resolveName(), lookupAddress()]));
+onMounted(() => void Promise.all([resolveName(), lookupAddress()]));
 </script>
 
 <template>
